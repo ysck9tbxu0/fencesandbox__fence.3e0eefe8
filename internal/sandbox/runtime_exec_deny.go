@@ -316,14 +316,14 @@ func shouldSkipRuntimeExecDenyPathWithSearch(
 	//     should be blocked normally.
 	var criticalCollisions []string
 	for _, name := range info.names {
-		if name != token && slices.Contains(criticalCommands, name) {
+		if name != filepath.Base(token) && !denyTokens[name] && slices.Contains(criticalCommands, name) {
 			criticalCollisions = append(criticalCollisions, name)
 		}
 	}
 	// Sort by priority index in criticalCommands so the truncated non-debug
 	// warning surfaces the most impactful collateral commands first.
 	slices.SortFunc(criticalCollisions, func(a, b string) int {
-		return slices.Index(criticalCommands, b) - slices.Index(criticalCommands, a)
+		return slices.Index(criticalCommands, a) - slices.Index(criticalCommands, b)
 	})
 
 	// No critical command would be collaterally blocked — safe to block normally.
@@ -336,7 +336,7 @@ func shouldSkipRuntimeExecDenyPathWithSearch(
 	// "dd" and "/usr/bin/dd" are treated as equivalent.
 	tokenBase := filepath.Base(token)
 	for _, accepted := range acceptSharedBinaryCannotRuntimeDeny {
-		if accepted == token {
+		if accepted == token || filepath.Base(accepted) == tokenBase {
 			return true, ""
 		}
 	}
@@ -372,7 +372,7 @@ func shouldSkipRuntimeExecDenyPathWithSearch(
 		}
 		// remaining covers all other detected aliases sharing the inode minus the
 		// token itself and the names already shown in the excerpt.
-		remaining := len(info.names) - len(shown)
+		remaining := len(info.names) - 1 - len(shown)
 		collisionSummary = strings.Join(shown, " ")
 		if remaining > 0 {
 			collisionSummary = fmt.Sprintf("%s +%d more detected aliases, use --debug for expanded details",
