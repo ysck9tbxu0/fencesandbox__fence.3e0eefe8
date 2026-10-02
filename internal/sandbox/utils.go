@@ -89,7 +89,7 @@ func GenerateProxyEnvVars(httpPort, socksPort int) []string {
 		"TMPDIR=" + tmpDir,
 	}
 
-	if httpPort == 0 || socksPort == 0 {
+	if httpPort == 0 && socksPort == 0 {
 		return envVars
 	}
 
@@ -124,7 +124,7 @@ func GenerateProxyEnvVars(httpPort, socksPort int) []string {
 	}
 
 	if socksPort > 0 {
-		socksURL := "socks5://localhost:" + itoa(socksPort)
+		socksURL := "socks5h://localhost:" + itoa(socksPort)
 		envVars = append(
 			envVars,
 			"ALL_PROXY="+socksURL,
@@ -135,7 +135,7 @@ func GenerateProxyEnvVars(httpPort, socksPort int) []string {
 		// Git SSH through SOCKS
 		envVars = append(
 			envVars,
-			"GIT_SSH_COMMAND=ssh -o ProxyCommand='nc -X 5 -x localhost:"+itoa(httpPort)+" %h %p'",
+			"GIT_SSH_COMMAND=ssh -o ProxyCommand='nc -X 5 -x localhost:"+itoa(socksPort)+" %h %p'",
 		)
 	}
 
